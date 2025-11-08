@@ -1,0 +1,47 @@
+[Unit]
+Description=Nepal Property Monitor - Automated Property Listing Tracker
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/yourusername/nepal-property-monitor
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/nepal-property-monitor
+Environment="PATH=/home/YOUR_USERNAME/nepal-property-monitor/.venv/bin"
+EnvironmentFile=/home/YOUR_USERNAME/nepal-property-monitor/.env
+
+# Main process
+ExecStart=/home/YOUR_USERNAME/nepal-property-monitor/.venv/bin/python -m property_monitor
+
+# Graceful shutdown
+KillSignal=SIGINT
+TimeoutStopSec=30
+KillMode=mixed
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# Resource limits
+MemoryMax=512M
+MemoryHigh=400M
+CPUQuota=50%
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/YOUR_USERNAME/nepal-property-monitor/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=property-monitor
+
+[Install]
+WantedBy=multi-user.target
