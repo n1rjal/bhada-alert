@@ -4,13 +4,19 @@
 
 ## Features
 
-✅ **Automated Monitoring** - Continuously checks Nepal Property Bazaar every 15 minutes
-✅ **Budget Filtering** - Only shows properties ≤ Rs 10,000/month (configurable)
-✅ **Smart Detection** - Tracks property IDs + timestamps to identify truly new listings
-✅ **Instant Notifications** - Rich Discord embeds with property details and priority indicators
-✅ **Price Change Alerts** - Get notified when property prices drop
-✅ **Production Ready** - SQLite storage, structured logging, graceful shutdown, systemd support
-✅ **Senior-Level Code** - Type hints, dependency injection, comprehensive error handling
+ ✅ **Automated Monitoring** - Continuously checks Nepal Property Bazaar every 15 minutes
+
+ ✅ **Budget Filtering** - Only shows properties ≤ Rs 10,000/month (configurable)
+
+ ✅ **Smart Detection** - Tracks property IDs + timestamps to identify truly new listings
+
+ ✅ **Instant Notifications** - Rich Discord embeds with property details and priority indicators
+
+ ✅ **Price Change Alerts** - Get notified when property prices drop
+
+ ✅ **Production Ready** - SQLite storage, structured logging, graceful shutdown, systemd support
+
+ ✅ **Senior-Level Code** - Type hints, dependency injection, comprehensive error handling
 
 ## Quick Start
 
