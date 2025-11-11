@@ -4,15 +4,15 @@ import random
 import signal
 import sys
 import time
+import logging
 
-import structlog
 
 from property_monitor.adapters.notifiers.discord import DiscordNotifier
-from property_monitor.adapters.scrapers.nepal_bazaar import NepalBazaarScraper
 from property_monitor.adapters.storage.sqlite_store import SQLiteStorage
 from property_monitor.config import get_settings
 from property_monitor.logging_config import get_logger, setup_logging
 from property_monitor.services.monitor_service import MonitorService
+from property_monitor.adapters.scrapers import scrappers
 
 
 class GracefulShutdown:
@@ -58,6 +58,7 @@ def main() -> int:
         Exit code (0 for success, 1 for error)
     """
     # Load configuration
+
     try:
         settings = get_settings()
     except Exception as e:
@@ -65,10 +66,8 @@ def main() -> int:
         print("Please check your .env file and ensure all required variables are set.")
         return 1
 
-    # Setup logging
     setup_logging(log_level=settings.log_level, environment=settings.environment)
     logger = get_logger(__name__)
-
     logger.info(
         "service_starting",
         app_name=settings.app_name,
@@ -78,11 +77,15 @@ def main() -> int:
 
     # Initialize components with dependency injection
     try:
-        scraper = NepalBazaarScraper(
+        service_init_kwargs = dict(
             timeout=settings.request_timeout,
             max_retries=settings.max_retries,
-            logger=logger,
         )
+
+        scrapers = [
+            scrapper_class(**service_init_kwargs)
+            for scrapper_class in scrappers  # noqa
+        ]
 
         notifier = DiscordNotifier(
             webhook_url=settings.discord_webhook_url.get_secret_value(),
@@ -98,7 +101,7 @@ def main() -> int:
         )
 
         monitor = MonitorService(
-            scraper=scraper,
+            scrapers=scrapers,
             notifier=notifier,
             storage=storage,
             max_price=settings.max_price,
@@ -125,7 +128,7 @@ def main() -> int:
             )
 
             try:
-                stats = monitor.check_properties(settings.property_urls)
+                stats = monitor.check_properties()
 
                 # Log statistics
                 print(f"\n{stats}")

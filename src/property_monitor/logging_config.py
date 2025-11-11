@@ -34,7 +34,7 @@ def setup_logging(log_level: str = "INFO", environment: str = "production") -> N
     if environment == "development":
         # Human-readable colored output for local development
         processors = shared_processors + [
-            structlog.dev.ConsoleRenderer(colors=True, exception_formatter=structlog.dev.plain_traceback)
+            structlog.dev.ConsoleRenderer(colors=True, exception_formatter=structlog.dev.better_tracebacks)
         ]
     else:
         # JSON output for production (easy to parse by log aggregators)

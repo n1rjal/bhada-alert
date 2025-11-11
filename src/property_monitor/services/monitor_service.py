@@ -2,7 +2,7 @@
 
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from typing import List
 
 import structlog
 
@@ -21,7 +21,7 @@ class MonitorService:
     Uses dependency injection for testability and loose coupling.
     """
 
-    scraper: PropertyScraper
+    scrapers: List[PropertyScraper]
     notifier: Notifier
     storage: Storage
     max_price: int
@@ -91,7 +91,7 @@ class MonitorService:
 
         return True
 
-    def check_properties(self, urls: list[str]) -> MonitorStats:
+    def check_properties(self) -> MonitorStats:
         """
         Check properties from URLs and send notifications for new ones.
 
@@ -110,10 +110,10 @@ class MonitorService:
         if is_first_run:
             self.logger.info("first_run_initialization", mode="baseline")
 
-        for url in urls:
-            try:
-                # Scrape properties from URL
-                properties = self.scraper.scrape(url)
+        try:
+            # Scrape properties from URL
+            for scrapper in self.scrapers:
+                properties = scrapper.scrape()
                 stats.total_properties += len(properties)
 
                 # Process each property
@@ -143,7 +143,8 @@ class MonitorService:
                                 )
                             else:
                                 self.logger.warning(
-                                    "notification_failed", property_id=prop.property_id
+                                    "notification_failed",
+                                    property_id=prop.property_id,
                                 )
                         except Exception as e:
                             stats.errors += 1
@@ -160,12 +161,12 @@ class MonitorService:
                         if not self.storage.is_new_or_updated(prop):
                             self.storage.save(prop)
 
-            except ScraperError as e:
-                stats.errors += 1
-                self.logger.error("scraper_error", url=url, error=str(e))
-            except Exception as e:
-                stats.errors += 1
-                self.logger.error("unexpected_error", url=url, error=str(e), exc_info=True)
+        except ScraperError as e:
+            stats.errors += 1
+            self.logger.error("scraper_error", url=url, error=str(e))
+        except Exception as e:
+            stats.errors += 1
+            self.logger.error("unexpected_error", url=url, error=str(e), exc_info=True)
 
         # Mark as initialized after first run
         if is_first_run:

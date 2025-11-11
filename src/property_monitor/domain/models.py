@@ -30,10 +30,14 @@ class Property(BaseModel):
     # Amenities
     bedrooms: int | None = Field(None, ge=0, description="Number of bedrooms")
     bathrooms: float | None = Field(None, ge=0, description="Number of bathrooms")
-    property_type: str | None = Field(None, description="Type (Flat, House, Room, etc.)")
+    property_type: str | None = Field(
+        None, description="Type (Flat, House, Room, etc.)"
+    )
 
     # Metadata
-    posted_minutes_ago: int | None = Field(None, ge=0, description="Minutes since posted")
+    posted_minutes_ago: int | None = Field(
+        None, ge=0, description="Minutes since posted"
+    )
     first_seen_at: datetime = Field(
         default_factory=datetime.utcnow, description="When first detected"
     )
@@ -42,7 +46,9 @@ class Property(BaseModel):
     )
 
     # Raw data for debugging
-    raw_data: dict[str, Any] = Field(default_factory=dict, description="Raw scraped data")
+    raw_data: dict[str, Any] = Field(
+        default_factory=dict, description="Raw scraped data"
+    )
 
     @field_validator("url")
     @classmethod
@@ -103,7 +109,9 @@ class MonitorStats(BaseModel):
     within_budget: int = Field(default=0, description="Properties within budget")
     notifications_sent: int = Field(default=0, description="Notifications sent")
     errors: int = Field(default=0, description="Errors encountered")
-    check_duration_ms: int = Field(default=0, description="Check duration in milliseconds")
+    check_duration_ms: int = Field(
+        default=0, description="Check duration in milliseconds"
+    )
 
     def __str__(self) -> str:
         """Human-readable statistics."""

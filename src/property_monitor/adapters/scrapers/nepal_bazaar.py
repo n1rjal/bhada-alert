@@ -4,36 +4,20 @@ import re
 import random
 from typing import Any
 from urllib.parse import urljoin
-
-import backoff
-import httpx
-import structlog
 from selectolax.parser import HTMLParser, Node
-
-from property_monitor.domain.exceptions import (
-    NetworkError,
-    PageNotFoundError,
-    RateLimitedError,
-)
+from .base import BasePropertyScrapper
 from property_monitor.domain.models import Property
 
 
-class NepalBazaarScraper:
+class NepalBazaarScraper(BasePropertyScrapper):
     """Scraper for Nepal Property Bazaar website."""
 
-    BASE_URL = "https://nepalpropertybazaar.com"
-
-    USER_AGENTS = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    ]
+    BASE_URL = "https://nepalpropertybazaar.com/search-results/?status%5B%5D=for-rent&location%5B%5D=&areas%5B%5D="
 
     def __init__(
         self,
         timeout: float = 30.0,
         max_retries: int = 3,
-        logger: structlog.stdlib.BoundLogger | None = None,
     ) -> None:
         """
         Initialize scraper.
@@ -45,66 +29,18 @@ class NepalBazaarScraper:
         """
         self.timeout = timeout
         self.max_retries = max_retries
-        self.logger = logger or structlog.get_logger(__name__)
-        self.client = httpx.Client(timeout=timeout, follow_redirects=True, http2=False)
 
     def _get_headers(self) -> dict[str, str]:
         """Generate request headers with random User-Agent."""
         return {
             "User-Agent": random.choice(self.USER_AGENTS),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",  # noqa
             "Accept-Language": "en-US,en;q=0.9",
             "Accept-Encoding": "gzip, deflate, br",
             "DNT": "1",
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
         }
-
-    @backoff.on_exception(
-        backoff.expo,
-        (httpx.RequestError, httpx.TimeoutException),
-        max_tries=3,
-        max_time=300,
-    )
-    def _fetch_page(self, url: str) -> str:
-        """
-        Fetch page with exponential backoff retry.
-
-        Args:
-            url: URL to fetch
-
-        Returns:
-            HTML content
-
-        Raises:
-            PageNotFoundError: If page returns 404
-            RateLimitedError: If rate limited
-            NetworkError: If network error occurs
-        """
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            if response.status_code == 404:
-                raise PageNotFoundError(url)
-            elif response.status_code == 429:
-                retry_after = int(response.headers.get("Retry-After", 60))
-                raise RateLimitedError(retry_after)
-
-            response.raise_for_status()
-            self.logger.info(
-                "page_fetched",
-                url=url,
-                status_code=response.status_code,
-                content_length=len(response.text),
-            )
-            return response.text
-
-        except httpx.HTTPStatusError as e:
-            self.logger.error("http_error", url=url, status_code=e.response.status_code)
-            raise NetworkError(url, str(e))
-        except httpx.RequestError as e:
-            self.logger.error("request_error", url=url, error=str(e))
-            raise NetworkError(url, str(e))
 
     def _parse_price(self, price_text: str) -> int | None:
         """
@@ -149,11 +85,17 @@ class NepalBazaarScraper:
             elif day_match:
                 return int(day_match.group(1)) * 1440
 
-            self.logger.warning("timestamp_parse_failed", timestamp_text=timestamp_text)
+            self.logger.warning(
+                "timestamp_parse_failed",
+                timestamp_text=timestamp_text,
+            )
             return None
 
         except (ValueError, AttributeError):
-            self.logger.warning("timestamp_parse_error", timestamp_text=timestamp_text)
+            self.logger.warning(
+                "timestamp_parse_error",
+                timestamp_text=timestamp_text,
+            )
             return None
 
     def _parse_amenities(self, item: Node) -> dict[str, Any]:
@@ -267,10 +209,14 @@ class NepalBazaarScraper:
             return property_obj
 
         except Exception as e:
-            self.logger.error("property_parse_error", error=str(e), exc_info=True)
+            self.logger.error(
+                "property_parse_error",
+                error=str(e),
+                exc_info=True,
+            )
             return None
 
-    def scrape(self, url: str) -> list[Property]:
+    def scrape(self) -> list[Property]:
         """
         Scrape properties from Nepal Property Bazaar.
 
@@ -283,14 +229,18 @@ class NepalBazaarScraper:
         Raises:
             ScraperError: If scraping fails
         """
-        html = self._fetch_page(url)
+        html = self._fetch_page(self.BASE_URL)
 
         # Parse with selectolax
         tree = HTMLParser(html)
 
         # Find all property listings
         property_items = tree.css("div.item-listing-wrap")
-        self.logger.info("properties_found", count=len(property_items), url=url)
+        self.logger.info(
+            "properties_found",
+            count=len(property_items),
+            url=self.BASE_URL,
+        )
 
         # Parse each property
         properties: list[Property] = []
@@ -301,10 +251,3 @@ class NepalBazaarScraper:
 
         self.logger.info("properties_parsed", count=len(properties))
         return properties
-
-    def __del__(self) -> None:
-        """Clean up HTTP client on deletion."""
-        try:
-            self.client.close()
-        except Exception:
-            pass

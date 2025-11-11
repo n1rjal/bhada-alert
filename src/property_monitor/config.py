@@ -56,11 +56,6 @@ class Settings(BaseSettings):
         default=25, ge=1, le=30, description="Discord rate limit"
     )
 
-    # URLs to monitor (JSON array in env var)
-    property_urls: list[str] = Field(
-        default_factory=list, description="List of property URLs to monitor"
-    )
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -76,22 +71,6 @@ class Settings(BaseSettings):
         """Create data directory if it doesn't exist."""
         v.mkdir(parents=True, exist_ok=True)
         return v
-
-    @field_validator("property_urls", mode="before")
-    @classmethod
-    def parse_property_urls(cls, v: Any) -> list[str]:
-        """Parse property URLs from JSON string or list."""
-        if isinstance(v, str):
-            import json
-
-            try:
-                return json.loads(v)
-            except json.JSONDecodeError:
-                # If not JSON, treat as single URL
-                return [v] if v else []
-        elif isinstance(v, list):
-            return v
-        return []
 
 
 # Singleton instance
