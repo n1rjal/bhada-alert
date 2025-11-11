@@ -8,7 +8,6 @@ from typing import Any
 import httpx
 import structlog
 
-from property_monitor.domain.exceptions import WebhookFailedError
 from property_monitor.domain.models import Property
 
 
@@ -76,24 +75,44 @@ class DiscordNotifier:
 
         # Build fields
         fields = [
-            {"name": "💰 Price", "value": f"Rs {property_data.price:,}/Month", "inline": True},
-            {"name": "📍 Location", "value": property_data.address[:1024], "inline": False},
+            {
+                "name": "💰 Price",
+                "value": f"Rs {property_data.price:,}/Month",
+                "inline": True,
+            },
+            {
+                "name": "📍 Location",
+                "value": property_data.address[:1024],
+                "inline": False,
+            },
         ]
 
         # Add amenities if available
         if property_data.bedrooms is not None:
             fields.append(
-                {"name": "🛏️ Bedrooms", "value": str(property_data.bedrooms), "inline": True}
+                {
+                    "name": "🛏️ Bedrooms",
+                    "value": str(property_data.bedrooms),
+                    "inline": True,
+                }
             )
 
         if property_data.bathrooms is not None:
             fields.append(
-                {"name": "🚿 Bathrooms", "value": str(property_data.bathrooms), "inline": True}
+                {
+                    "name": "🚿 Bathrooms",
+                    "value": str(property_data.bathrooms),
+                    "inline": True,
+                }
             )
 
         if property_data.property_type:
             fields.append(
-                {"name": "🏠 Type", "value": property_data.property_type[:1024], "inline": True}
+                {
+                    "name": "🏠 Type",
+                    "value": property_data.property_type[:1024],
+                    "inline": True,
+                }
             )
 
         # Add posted time if available
@@ -143,16 +162,22 @@ class DiscordNotifier:
 
                 if response.status_code == 429:
                     # Rate limited by Discord
-                    retry_after = float(response.headers.get("X-RateLimit-Reset-After", 1))
+                    retry_after = float(
+                        response.headers.get("X-RateLimit-Reset-After", 1)
+                    )
                     self.logger.warning(
-                        "discord_rate_limited", retry_after=retry_after, attempt=attempt + 1
+                        "discord_rate_limited",
+                        retry_after=retry_after,
+                        attempt=attempt + 1,
                     )
                     time.sleep(retry_after)
                     continue
 
                 response.raise_for_status()
                 self.request_times.append(time.time())
-                self.logger.info("notification_sent", title=embed.get("title", "Unknown"))
+                self.logger.info(
+                    "notification_sent", title=embed.get("title", "Unknown")
+                )
                 return True
 
             except httpx.HTTPStatusError as e:

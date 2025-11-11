@@ -25,9 +25,14 @@ class Settings(BaseSettings):
 
     # Scraping settings
     scrape_interval_seconds: int = Field(
-        default=900, ge=60, le=3600, description="Interval between scraping runs (15 min default)"
+        default=900,
+        ge=60,
+        le=3600,
+        description="Interval between scraping runs (15 min default)",
     )
-    max_retries: int = Field(default=3, ge=1, le=10, description="Maximum retry attempts")
+    max_retries: int = Field(
+        default=3, ge=1, le=10, description="Maximum retry attempts"
+    )
     request_timeout: float = Field(
         default=30.0, ge=5.0, le=120.0, description="HTTP request timeout"
     )
@@ -44,7 +49,9 @@ class Settings(BaseSettings):
     )
 
     # Discord webhook
-    discord_webhook_url: SecretStr = Field(..., description="Discord webhook URL (required)")
+    discord_webhook_url: SecretStr = Field(
+        ..., description="Discord webhook URL (required)"
+    )
     discord_rate_limit_per_minute: int = Field(
         default=25, ge=1, le=30, description="Discord rate limit"
     )

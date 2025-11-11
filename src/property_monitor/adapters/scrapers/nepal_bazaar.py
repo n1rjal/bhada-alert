@@ -2,7 +2,6 @@
 
 import re
 import random
-from datetime import datetime, timedelta
 from typing import Any
 from urllib.parse import urljoin
 
@@ -14,7 +13,6 @@ from selectolax.parser import HTMLParser, Node
 from property_monitor.domain.exceptions import (
     NetworkError,
     PageNotFoundError,
-    ParseError,
     RateLimitedError,
 )
 from property_monitor.domain.models import Property
@@ -48,9 +46,7 @@ class NepalBazaarScraper:
         self.timeout = timeout
         self.max_retries = max_retries
         self.logger = logger or structlog.get_logger(__name__)
-        self.client = httpx.Client(
-            timeout=timeout, follow_redirects=True, http2=False
-        )
+        self.client = httpx.Client(timeout=timeout, follow_redirects=True, http2=False)
 
     def _get_headers(self) -> dict[str, str]:
         """Generate request headers with random User-Agent."""
