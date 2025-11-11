@@ -1,0 +1,5 @@
+services:
+  bhada_alert:
+    build:
+      context: .
+    env_file: .env

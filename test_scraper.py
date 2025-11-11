@@ -8,8 +8,8 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 import httpx
 from selectolax.parser import HTMLParser
-
 from property_monitor.logging_config import get_logger, setup_logging
+
 
 setup_logging(log_level="INFO", environment="development")
 logger = get_logger(__name__)

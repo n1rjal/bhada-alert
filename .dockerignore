@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local environment configuration
+.env
+
+# Test files
+tests/
+test_*.py
+
+# IDE/Editor specific
+.idea/
+.vscode/
+
+# Data backups
+data/backups/
+
+# OS-specific
+.DS_Store
+Thumbs.db
