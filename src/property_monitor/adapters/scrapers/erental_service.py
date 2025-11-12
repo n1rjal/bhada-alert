@@ -96,6 +96,12 @@ class ERentalService(BasePropertyScrapper):
             tree = HTMLParser(html)
 
             nodes = tree.css("div.jet-listing-grid__item")
+            self.logger.info(
+                "properties_found",
+                count=len(nodes),
+                url=self.BASE_URL,
+            )
+
             properties = [
                 self._parse_property(node) for node in nodes if node is not None
             ]
