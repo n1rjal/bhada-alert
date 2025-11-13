@@ -66,18 +66,27 @@ class BasePropertyScrapper:
         headers = self._get_headers()
         return httpx.Client(headers=headers)
 
+    def _get_curl_headers(self):
+        return {
+            "User-Agent": "curl/8.5.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",  # noqa did this to bypass zipped content
+            "Connection": "keep-alive",
+            "Accept-Encoding": "text/html",
+        }
+
     @backoff.on_exception(
         backoff.expo,
         (httpx.RequestError, httpx.TimeoutException),
         max_tries=3,
         max_time=300,
     )
-    def _fetch_page(self, url: str) -> str:
+    def _fetch_page(self, url: str, fake_curl=False) -> str:
         """
         Fetch page with exponential backoff retry.
 
         Args:
             url: URL to fetch
+            fake_curl: Some page only works when fetched via curl(Default False)
 
         Returns:
             HTML content
@@ -88,7 +97,8 @@ class BasePropertyScrapper:
             NetworkError: If network error occurs
         """
         try:
-            response = self.client.get(url, headers=self._get_headers())
+            headers = self._get_curl_headers() if fake_curl else self._get_headers()
+            response = self.client.get(url, headers=headers)
 
             if response.status_code == 404:
                 raise PageNotFoundError(url)

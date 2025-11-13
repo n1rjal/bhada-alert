@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class PropertyPriority(str, Enum):
@@ -49,15 +49,6 @@ class Property(BaseModel):
     raw_data: dict[str, Any] = Field(
         default_factory=dict, description="Raw scraped data"
     )
-
-    @field_validator("url")
-    @classmethod
-    def validate_url(cls, v: str) -> str:
-        """Ensure URL is absolute."""
-        if not v.startswith("http"):
-            base_url = "https://nepalpropertybazaar.com"
-            return f"{base_url}{v}" if v.startswith("/") else f"{base_url}/{v}"
-        return v
 
     @property
     def priority(self) -> PropertyPriority:
