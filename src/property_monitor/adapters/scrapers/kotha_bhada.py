@@ -1,5 +1,6 @@
 from selectolax.parser import HTMLParser
 from property_monitor.adapters.scrapers.base import BasePropertyScrapper
+from pydantic import ValidationError
 
 import re
 
@@ -128,7 +129,12 @@ class KothaBhadaScrapper(BasePropertyScrapper):
             else None  # noqa
         )
         if link:
-            return self.scrape_detail_page(link)
+            try:
+                return self.scrape_detail_page(link)
+            except Exception as e:
+                self.logger.info("property_validation_error", str(e))
+        else:
+            self.logger.info("property_no_link")
 
     def scrape(self):
         try:
@@ -153,5 +159,4 @@ class KothaBhadaScrapper(BasePropertyScrapper):
                 error=str(e),
                 exc_info=True,
             )
-            raise e
             return None
